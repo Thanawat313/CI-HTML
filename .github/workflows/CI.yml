@@ -58,36 +58,21 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:latest \
             image --severity CRITICAL,HIGH --exit-code 0 my-html-app:${{ github.sha }}
-    # 4. Deployment (CD) บนเครื่อง Local Windows
+    # 4. Deployment (CD) - แก้ไขให้รองรับ Windows Runner โดยเฉพาะ
   deploy-local:
     needs: container-security
     if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Deploy HTML App to Local Docker (Windows Host)
-        # ใช้ shell: pwsh เพื่อบังคับให้รันด้วย PowerShell ที่เสถียรกว่า
-        shell: pwsh
+      - name: Deploy to Local Docker
+        # ใช้ shell: cmd เพื่อเลี่ยงบัค Substring ใน PowerShell
+        shell: cmd
         run: |
-          # 1. Build Image ในเครื่อง
           docker build -t my-html-app:latest .
-          
-          # 2. เช็กและลบ Container เก่า (เขียนแบบ PowerShell)
-          $container = docker ps -aq --filter "name=my-site-container"
-          if ($container) {
-              Write-Host "Stopping and removing existing container..."
-              docker stop my-site-container
-              docker rm my-site-container
-          }
-          
-          # 3. รัน Container ใหม่
-          docker run -d `
-            --name my-site-container `
-            -p 8080:80 `
-            --restart always `
-            my-html-app:latest
-
-      - name: Check Status
-        shell: pwsh
-        run: docker ps --filter "name=my-site-container"
+          docker stop my-site-container >nul 2>&1
+          docker rm my-site-container >nul 2>&1
+          docker run -d --name my-site-container -p 8080:80 --restart always my-html-app:latest
+          docker ps --filter "name=my-site-container"
