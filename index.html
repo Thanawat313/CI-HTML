@@ -1,0 +1,66 @@
+ <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>My Secure HTML App</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 { color: var(--primary-color); }
+        p { color: #64748b; }
+        .status-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>CI Success! </h1>
+        <p>ยินดีด้วย! เว็บไซต์ถูก Deploy ผ่าน Docker เรียบร้อยแล้ว</p>
+        <div id="deploy-info">
+            <span class="status-badge">Status: Online (Localhost)</span>
+        </div>
+        <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+        <small id="last-updated">กำลังโหลดข้อมูล...</small>
+    </div>
+
+    <script>
+        // ตัวอย่างการใช้ JavaScript เล็กน้อย 
+        // CodeQL ใน Pipeline จะช่วยตรวจสอบความปลอดภัยของ Script ตรงนี้ด้วย
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            document.getElementById('last-updated').innerText = 
+                `อัปเดตล่าสุดเมื่อ: ${now.toLocaleTimeString('th-TH')}`;
+            
+            console.log("App is running securely on Docker!");
+        });
+    </script>
+</body>
+</html>

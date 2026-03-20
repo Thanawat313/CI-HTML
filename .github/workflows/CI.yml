@@ -1,0 +1,59 @@
+name: HTML Security & Docker Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read      
+  security-events: write  
+  actions: read
+
+jobs:
+  # 1. Linting & Health Check (แทนที่ Build & Test)
+  lint-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: HTML Hint (Check for syntax errors)
+        # ใช้เครื่องมือตรวจสอบโครงสร้าง HTML เบื้องต้น
+        run: |
+          npx htmlhint "index.html"
+
+  # 2. Security Scan (SAST)
+  security-scan:
+    needs: lint-and-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          # สำหรับ HTML เราจะใช้ javascript เพื่อให้ CodeQL ตรวจสอบ Inline script (ถ้ามี)
+          languages: 'javascript-typescript' 
+          
+      - name: Perform Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # 3. Build Docker Image & Scan
+  container-security:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build Docker Image
+      
+        run: docker build -t my-html-app:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.20.0 
+        with:
+          image-ref: 'my-html-app:${{ github.sha }}' 
+          format: 'table'
+          exit-code: 0 
+          severity: 'CRITICAL,HIGH'
