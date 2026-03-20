@@ -58,3 +58,29 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:latest \
             image --severity CRITICAL,HIGH --exit-code 0 my-html-app:${{ github.sha }}
+    # 4. Deployment (CD) บนเครื่อง Local
+  deploy-local:
+    needs: container-security # ต้องผ่านการ Scan ทั้งหมดก่อน
+    if: github.ref == 'refs/heads/main' # Deploy เฉพาะตอน push เข้า main เท่านั้น
+    runs-on: self-hosted # <--- สั่งให้งานนี้รันที่เครื่องคอมพิวเตอร์ของคุณ
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy HTML App to Local Docker
+        run: |
+          # 1. Build Image ใหม่ในเครื่อง
+          docker build -t my-html-app:latest .
+          
+          # 2. เช็กว่ามี Container เก่ารันอยู่ไหม ถ้ามีให้ลบทิ้งก่อน
+          docker stop my-site-container || true
+          docker rm my-site-container || true
+          
+          # 3. รัน Container ใหม่ที่ Port 8080
+          docker run -d \
+            --name my-site-container \
+            -p 8080:80 \
+            --restart always \
+            my-html-app:latest
+
+      - name: Check Status
+        run: docker ps | grep my-site-container
